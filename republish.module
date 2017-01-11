@@ -50,14 +50,14 @@ function republish_block_configure($delta = '') {
  */
 function republish_block_save($delta = '', $edit = array()) {
   if ($delta == 'republish_block') {
-    variable_set('republish_link_text', $edit['republish_link_text']);
-    variable_set('republish_title', $edit['republish_title']);
-    variable_set('republish_guidelines', $edit['republish_guidelines']);
-    variable_set('republish_instructions', $edit['republish_instructions']);
-    variable_set('republish_body', $edit['republish_body']);
-    variable_set('republish_body_readonly', $edit['republish_body_readonly']);
-    variable_set('republish_branding', $edit['republish_branding']);
-    variable_set('republish_link_css_class', $edit['republish_link_css_class']);
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_link_text', $edit['republish_link_text'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_title', $edit['republish_title'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_guidelines', $edit['republish_guidelines'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_instructions', $edit['republish_instructions'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_body', $edit['republish_body'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_body_readonly', $edit['republish_body_readonly'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_branding', $edit['republish_branding'])->save();
+    \Drupal::configFactory()->getEditable('republish.settings')->set('republish_link_css_class', $edit['republish_link_css_class'])->save();
   }
 }
 
@@ -68,9 +68,9 @@ function republish_block_view($delta = '') {
   $block = array();
   switch ($delta) {
     case 'republish_block':
-      if (user_access('access content')) {
+      if (\Drupal::currentUser()->hasPermission('access content')) {
         $block['subject'] = t('Republish');
-        $block['content'] = drupal_get_form('republish_content_form');
+        $block['content'] = \Drupal::formBuilder()->getForm('republish_content_form');
       }
       break;
   }
@@ -82,7 +82,7 @@ function republish_block_view($delta = '') {
  */
 function republish_content_form($form, &$form_state) {
   // Getting available contexts from menu.
-  $context = menu_get_object();
+  $context = \Drupal::routeMatch()->getParameter();
   if (!($context && isset($context->nid))) {
     return NULL;
   }
@@ -104,7 +104,7 @@ function _republish_settings_form($callby, &$form, $form_state = array(), $conf 
     '#type' => 'textfield',
     '#title' => t('Republish Link Css Class'),
     '#description' => t('Provide css class for Republish button. Use space to separate multiple classes.'),
-    '#default_value' => variable_get('republish_link_css_class', ''),
+    '#default_value' => \Drupal::config('republish.settings')->get('republish_link_css_class'),
   );
   $form['republish_title'] = array(
     '#type' => 'textfield',
@@ -131,7 +131,7 @@ function _republish_settings_form($callby, &$form, $form_state = array(), $conf 
     '#default_value' => _republish_text($callby, 'body', $conf, NULL, FALSE),
   );
   $dv_ctools = !empty($conf) ? $conf['body_readonly'] : 1;
-  $dv_block = variable_get('republish_body_readonly', 1);
+  $dv_block = \Drupal::config('republish.settings')->get('republish_body_readonly');
   $form['republish_body_readonly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Republish Main Body Readonly to end user.'),
@@ -144,7 +144,7 @@ function _republish_settings_form($callby, &$form, $form_state = array(), $conf 
     '#default_value' => _republish_text($callby, 'branding', $conf, NULL, FALSE),
   );
 
-  if (module_exists("token")) {
+  if (\Drupal::moduleHandler()->moduleExists("token")) {
     $form['republish_token_help'] = array(
       '#type' => 'markup',
       '#token_types' => array('node'),
@@ -158,7 +158,7 @@ function _republish_settings_form($callby, &$form, $form_state = array(), $conf 
  */
 function _republish_content_form($callby, $context, &$form, &$form_state, $conf = array()) {
   $form['republish_content_button'] = array(
-    '#markup' => '<a href="#" id="republish_content_button" class="' . check_plain(variable_get("republish_link_css_class", "")) . '">' . check_plain(_republish_text($callby, 'link_text', $conf)) . '</a>',
+    '#markup' => '<a href="#" id="republish_content_button" class="' . \Drupal\Component\Utility\SafeMarkup::checkPlain(\Drupal::config('republish.settings')->get("republish_link_css_class")) . '">' . \Drupal\Component\Utility\SafeMarkup::checkPlain(_republish_text($callby, 'link_text', $conf)) . '</a>',
   );
   $form['republish_content_overlay'] = array(
     '#type' => 'fieldset',
@@ -169,7 +169,7 @@ function _republish_content_form($callby, $context, &$form, &$form_state, $conf 
     '#suffix' => '</div>',
   );
   $form['republish_content_overlay']['title'] = array(
-    '#markup' => check_plain(_republish_text($callby, 'title', $conf)),
+    '#markup' => \Drupal\Component\Utility\SafeMarkup::checkPlain(_republish_text($callby, 'title', $conf)),
     '#prefix' => '<h2 id="republish_content_title">',
     '#suffix' => '</h2>',
   );
@@ -189,13 +189,13 @@ function _republish_content_form($callby, $context, &$form, &$form_state, $conf 
     '#type' => 'textarea',
     '#rows' => 10,
     '#default_value' => $content,
-    '#description' => check_plain(_republish_text($callby, 'instructions', $conf)),
+    '#description' => \Drupal\Component\Utility\SafeMarkup::checkPlain(_republish_text($callby, 'instructions', $conf)),
     '#attributes' => array(
       'onclick' => 'this.focus();this.select()',
     ),
   );
 
-  $readonly = ($callby == 'ctools') ? (!empty($conf) ? $conf['body_readonly'] : 1) : variable_get('republish_body_readonly', 1);
+  $readonly = ($callby == 'ctools') ? (!empty($conf) ? $conf['body_readonly'] : 1) : \Drupal::config('republish.settings')->get('republish_body_readonly');
   if ($readonly) {
     $form['republish_content_overlay']['body']['main_body']['#attributes']['readonly'] = 'readonly';
   }
@@ -224,7 +224,12 @@ function _republish_text($callby, $key, $conf = array(), $language = NULL, $repl
       break;
 
     case 'block':
-      $admin_setting = variable_get('republish_' . $key, FALSE);
+      // @FIXME
+// // @FIXME
+// // The correct configuration object could not be determined. You'll need to
+// // rewrite this call manually.
+// $admin_setting = variable_get('republish_' . $key, FALSE);
+
       break;
   }
 
@@ -263,7 +268,7 @@ function _republish_text($callby, $key, $conf = array(), $language = NULL, $repl
 
   if ($replace) {
     // Token Replace the text.
-    return token_replace($text, array('node' => $node));
+    return \Drupal::token()->replace($text, array('node' => $node));
   }
 
   return $text;

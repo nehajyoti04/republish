@@ -1,0 +1,8 @@
+republish.settings:
+  type: mapping
+  label: Settings
+  mapping:
+    republish_link_css_class:
+      type: string
+    republish_body_readonly:
+      type: integer

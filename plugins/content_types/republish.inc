@@ -27,7 +27,7 @@ function republish_render($subtype, $conf, $args, $context) {
   if (empty($node)) {
     return;
   }
-  $data = drupal_get_form('republish_form', $context, $conf);
+  $data = \Drupal::formBuilder()->getForm('republish_form', $context, $conf);
   $block = new stdClass();
   $block->content = $data;
   $block->title = '';
@@ -40,7 +40,7 @@ function republish_render($subtype, $conf, $args, $context) {
  */
 function republish_form($form, &$form_state, $context, $conf) {
   // Getting available contexts from menu.
-  $context = node_load($context->data->nid);
+  $context = \Drupal::entityManager()->getStorage('node')->load($context->data->nid);
   _republish_content_form('ctools', $context, $form, $form_state, $conf);
   return $form;
 }
