@@ -1,7 +1,4 @@
 name: Republish
 description: 'Republish the content in an overlay.'
 core: 8.x
-version: 7.x-1.0
-project: republish
-datestamp: '1449428353'
 type: module
