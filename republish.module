@@ -15,14 +15,14 @@ function republish_help($path, $arg) {
   }
 }
 
-/**
- * Implements hook_ctools_plugin_directory().
- */
-function republish_ctools_plugin_directory($module, $plugin) {
-  if (($module == 'ctools') && ($plugin == 'content_types')) {
-    return 'plugins/content_types';
-  }
-}
+///**
+// * Implements hook_ctools_plugin_directory().
+// */
+//function republish_ctools_plugin_directory($module, $plugin) {
+//  if (($module == 'ctools') && ($plugin == 'content_types')) {
+//    return 'plugins/content_types';
+//  }
+//}
 
 /**
  * Implements hook_block_info().
